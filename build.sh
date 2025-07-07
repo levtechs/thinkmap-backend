@@ -1,17 +1,22 @@
 #!/bin/bash
-set -e  # Exit immediately if a command exits with a non-zero status
 
-echo "Creating virtual environment..."
-python3 -m venv .venv
+# Name of your image and container
+IMAGE_NAME="thinkmap-backend"
+CONTAINER_NAME="thinkmap-backend-container"
 
-echo "Activating virtual environment..."
-source .venv/bin/activate
+# Stop any existing container with the same name
+echo "Stopping and removing existing container (if any)..."
+docker stop $CONTAINER_NAME 2>/dev/null || true
+docker rm $CONTAINER_NAME 2>/dev/null || true
 
-echo "Upgrading pip..."
-pip install --upgrade pip
+# Build Docker image
+echo "Building Docker image: $IMAGE_NAME..."
+docker build -t $IMAGE_NAME .
 
-echo "Installing dependencies..."
-pip install -r requirements.txt
+# Run the container
+echo "Starting Docker container: $CONTAINER_NAME..."
+docker run -d -p 8000:8000 --name $CONTAINER_NAME $IMAGE_NAME
 
-echo "Starting FastAPI server with Uvicorn..."
-uvicorn server:app --host 0.0.0.0 --port 8000
+# Print container logs
+echo "Tailing logs from $CONTAINER_NAME..."
+docker logs -f $CONTAINER_NAME
