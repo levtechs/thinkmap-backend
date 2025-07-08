@@ -6,8 +6,14 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.decomposition import PCA
 from scipy.linalg import orthogonal_procrustes
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
+
+# Allow CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3001"],
@@ -16,9 +22,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Initialize models
 model = SentenceTransformer('all-MiniLM-L6-v2')
 pca = PCA(n_components=3)
 
+# Define models
 class NoteRequest(BaseModel):
     id: int
     text: str
@@ -35,10 +43,13 @@ class AddNoteRequest(BaseModel):
     prev_embeds: List[List[float]]
     prev_points: List[List[float]]
 
-
 class AddNoteResponse(BaseModel):
     points: List[PointResponse]
     embeddings: List[List[float]]
+
+@app.get("/")
+def read_root():
+    return {"message": "Hello from ThinkMap"}
 
 @app.post("/add_note", response_model=AddNoteResponse)
 def add_note(request: AddNoteRequest):
