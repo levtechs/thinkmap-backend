@@ -10,15 +10,24 @@ RUN apt-get update && apt-get install -y \
     gfortran \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Install Python dependencies first (for better Docker layer caching)
 COPY requirements.txt .
-RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy app code
-COPY . .
+COPY server.py .
 
-# Expose port (FastAPI default)
-EXPOSE 8000
+# Create non-root user for security
+RUN adduser --disabled-password --gecos '' appuser && \
+    chown -R appuser:appuser /app
+USER appuser
 
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8080"]
+# Set environment variable for production
+ENV PYTHONUNBUFFERED=1
+
+# Expose port (Cloud Run will set PORT env variable)
+EXPOSE 8080
+
+# Use environment variable for port, fallback to 8080
+CMD ["python", "server.py"]

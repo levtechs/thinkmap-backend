@@ -3,14 +3,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
 import numpy as np
+import os
+import uvicorn
 from sentence_transformers import SentenceTransformer
 from sklearn.decomposition import PCA
 from scipy.linalg import orthogonal_procrustes
 
 app = FastAPI()
+
+# Allow more origins for production deployment
+allowed_origins = [
+    "http://localhost:3001",
+    "https://localhost:3001",
+    # Add your production frontend URLs here
+    "https://*.run.app",  # Cloud Run default domains
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3001"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -104,3 +115,8 @@ def add_note(request: AddNoteRequest):
 
     return AddNoteResponse(points=points_list, embeddings=embeddings_list)
 
+
+if __name__ == "__main__":
+    # Cloud Run sets the PORT environment variable
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run(app, host="0.0.0.0", port=port)
