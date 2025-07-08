@@ -21,5 +21,4 @@ COPY . .
 # Expose port (FastAPI default)
 EXPOSE 8000
 
-# Entrypoint to run the server
-CMD ["bash", "build.sh"]
+CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8080"]
